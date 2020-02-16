@@ -61,17 +61,6 @@ public:
 	std::string get_dname() {
 		return dname;
 	}
-
-	/*bool operator<(const Dept& dept) const {
-		if (this->managerid < dept.managerid){
-			std::cout << "true" << std::endl;
-			return true;
-		}
-		else{
-			std::cout << "false" << std::endl;
-			return false;
-		}
-	}*/
 };
 
 class Emp {
@@ -289,12 +278,96 @@ public:
 	}
 };
 
+class BufferHandler{
+private:
+	std::fstream first_buffer;
+	std::fstream second_buffer;
+	std::string name;
+	std::string type;
+
+	int total;
+	int block_size;
+	
+	void read(std::vector<std::string> &row, std::fstream &name, std::string &temp){
+		std::string line, word, filename;
+		
+		getline(name, line);
+		std::stringstream ss(temp);
+
+		while (getline(ss, word, ',')) {
+			row.push_back(word);
+		}
+	}
+
+public:
+	BufferHandler(std::string name, std::string type, int total, int block_size){
+		this->name = name;
+		this->total = total;
+		this->block_size = block_size;
+		this->type = type;
+	}
+
+	std::string fetch_file_name(int i){
+		std::stringstream ss;
+		ss << i;
+		std::string index = ss.str();
+		return name + index;
+	}
+
+	std::string merge(std::string file_one, std::string file_two){
+		first_buffer.open(file_one.c_str(), std::ios::in);
+		second_buffer.open(file_two.c_str(), std::ios::in);
+
+		unsigned int count = 0;
+		std::vector<std::string> file_one_row;
+		std::vector<std::string> file_two_row;
+		std::string filename, one_temp, two_temp;
+		// Working here need to merge the two files while obaying the 22 block limit.
+		File page = NULL;
+		while (this->first_buffer.is_open() || this->second_buffer.is_open()){
+			for (int i = 0; i)
+			if (this->first_buffer >> one_temp)
+				read(file_one_row, this->first_buffer, one_temp);
+
+			if (this->second_buffer >> two_temp)
+				read(file_two_row, this->second_buffer, two_temp);
+			
+
+		}
+
+		first_buffer.close();
+		second_buffer.close();
+		return "temp";
+	}
+
+	void merge_files(){
+		if (total > 0)
+			return;
+	
+		std::string merged_file;
+		std::string first_file;
+		std::string second_file;
+		// First Pass.
+		first_file = fetch_file_name(0);
+		second_file = fetch_file_name(1);
+		merged_file = merge(first_file, second_file);
+
+		// Second Pass
+		for (int i = 2; i < total-1; i++){
+			second_file = fetch_file_name(i);
+			merged_file = merge(merged_file, second_file);
+		}
+	}
+};
+
 int main()
 {
-	FileHandler dept_file("Emp.csv", "emp", 22);
-	int total = dept_file.read_table();
-
-	std::cout << total << std::endl;
+	int memory_size = 22;
+	FileHandler dept_file("Dept.csv", "dept", memory_size);
+	FileHandler emp_file("Emp.csv", "emp", memory_size);
+	
+	int total_dept = dept_file.read_table();
+	int total_emp = emp_file.read_table();
 
 	return 0;
 }
