@@ -222,7 +222,6 @@ private:
 		count = block_count = 0;
 		while (std::getline(fin, temp)) {
 			row.clear();
-			//getline(fin, line);
 			std::stringstream ss(temp);
 
 			while (getline(ss, word, ',')) {
@@ -247,8 +246,6 @@ private:
 			}
 
 			if (type.compare("dept") == 0) {
-
-				std::cout << row[2] << std::endl;
 				std::stringstream sd(row[2]);
 				sd >> dd;
 				page->build_dept(atoi(row[0].c_str()), atoi(row[3].c_str()), dd, row[1]);
@@ -359,7 +356,7 @@ public:
 
 		std::stringstream ss;
 		ss << file_id;
-		filename = ss.str();
+		filename = type + "_" + ss.str();
 
 		if (type.compare("dept") == 0)
 			type_flag = 3;
@@ -379,7 +376,7 @@ public:
 
 			if (page == NULL)
 				page = new File(filename);
-			
+
 			// !!!!DANGER!!!!
 			// Bad Hack....
 			// This is a sin.
@@ -467,7 +464,7 @@ public:
 			std::stringstream ss;
 			first_file = fetch_file_name(1);
 			ss << type_flag;
-			if (renamefile(first_file, ss.str()))
+			if (renamefile(first_file, type + "_" + ss.str()))
 				perror("Error renaming file.\n");
 			return;
 		}
@@ -475,7 +472,7 @@ public:
 		// First Pass.
 		first_file = fetch_file_name(1);
 		second_file = fetch_file_name(2);
-		merged_file = merge(first_file, second_file, type_flag);
+		merged_file = merge(first_file, second_file, 0);
 
 		// Only for Unix like systems.
 		if (removefile(first_file) || removefile(second_file))
@@ -483,10 +480,12 @@ public:
 
 		// Second Pass
 		int i;
-		for (i = 2; i < total - 1; i++) {
+        std::string temp;
+		for (i = 3; i <= total; i++) {
 			second_file = fetch_file_name(i);
+            temp = merged_file;
 			merged_file = merge(merged_file, second_file, i);
-			if (removefile(second_file) != 0)
+			if (removefile(second_file) != 0 || removefile(temp) != 0)
 				perror("Error deleting file.\n");
 		}
 	}
@@ -500,7 +499,7 @@ int main()
 
 	int total_dept = dept_file.read_table();
 	int total_emp = emp_file.read_table();
-	
+
 	BufferHandler buffer_handler_emp("tempemp_", "emp", total_emp, memory_size);
 	BufferHandler buffer_handler_dept("tempdept_", "dept", total_dept, memory_size);
 
