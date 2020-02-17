@@ -1,27 +1,45 @@
-0,0,5000,Tom
-1,0,5000,Bob
-2,1,5000,Ella
-3,2,5000,Tom
-8,7,5000,Bob
-9,8,5000,Ella
-10,9,5000,Tom
-11,10,5000,Bob
-12,11,5000,Ella
-4,3,5000,Tom
-5,4,5000,Bob
-6,5,5000,Ella
-7,6,5000,Tom
-13,12,5000,Bob
-14,13,5000,Ella
-15,14,5000,Tom
-16,15,5000,Bob
-22,21,5000,Ella
-23,22,5000,Tom
-24,23,5000,Bob
-25,24,5000,Ella
-26,25,5000,Tom
-17,16,5000,Bob
-18,17,5000,Ella
-19,18,5000,Tom
-20,19,5000,Bob
-21,20,5000,Ella
+110255,Arthur Dent,54,144402
+110388,Audrey Horne,27,122402
+120302,Shelly Johnson,43,197402
+499398,Hank hill,45,131305
+499268,Tim Robbinson,32,127503
+12010,Sergio Ravarez,55,64000
+499868,Shaz Bierbaum,60,61802
+499950,Weidon Gente,52,54788
+499998,Patricia Breugel,60,40000
+12100,Gladys Cooper,32,77000
+111692,Tonny Butterworth,62,40000
+403353,Shigehito Kropatsch,52,59783
+110515,Dale Cooper,32,980000
+12110,Rodney Ferreri,37,99000
+110183,Shirish Ossenbruggen,63,48291
+110303,Krassimir Wegerle,60,1374402
+10073,Shir McClurg,62,56473
+12020,Antonio Lavante,34,36000
+110511,DeForest Hagimont,59,48626
+111400,Arie Staelin,57,72446
+12016,Benjamin Horne,44,137444
+110517,Dale Gribble,67,137402
+110519,Stephen Malkmus,43,132204
+12021,Nick Cave,78,117402
+110503,Frank Frink,34,132402
+110556,Rick Deckard,56,137406
+10042,Magy Stamatiou,60,81662
+10059,Alejandro McAlpine,63,71218
+12030,Tonny Conner,25,44000
+12000,Alex Dalas,55,54000
+5000,Arthur Dent,54,144402
+6000,Audrey Horne,27,122402
+7000,Shelly Johnson,43,197402
+8000,Hank hill,45,131305
+9000,Tim Robbinson,32,127503
+200,Sergio Ravarez,55,64000
+800,Shaz Bierbaum,60,61802
+555,Weidon Gente,52,54788
+6666,Patricia Breugel,60,40000
+9857,Gladys Cooper,32,77000
+45632,Tonny Butterworth,62,40000
+25879,Shigehito Kropatsch,52,59783
+79136,Dale Cooper,32,980000
+67310,Rodney Ferreri,37,99000
+213698,Shirish Ossenbruggen,63,48291
