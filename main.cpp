@@ -139,6 +139,7 @@ public:
 	File(std::string name) {
 		this->name.assign(name);
 	}
+
 	void set_file_name(std::string name) {
 		this->name.assign(name);
 	}
@@ -155,8 +156,9 @@ public:
 	bool save() {
 		if (dept.size() != 0) {
 			std::sort(dept.begin(), dept.end(), compare_dept);
-
-			fout.open(name.c_str(), std::ios::out);
+			
+			std::ofstream fout(name.c_str(), std::ios::app);
+			//fout.open(name.c_str(), std::ios::out);
 			for (size_t i = 0; i < dept.size(); i++) {
 				fout << dept[i]->get_did() << ","
 					<< dept[i]->get_dname() << ","
@@ -169,7 +171,8 @@ public:
 		if (emp.size() != 0) {
 			std::sort(emp.begin(), emp.end(), compare_emp);
 
-			fout.open(name.c_str(), std::ios::out);
+			std::ofstream fout(name.c_str(), std::ios::app);
+			//fout.open(name.c_str(), std::ios::out);
 			for (size_t i = 0; i < emp.size(); i++) {
 				fout << emp[i]->get_eid() << ","
 					<< emp[i]->get_ename() << ","
@@ -339,7 +342,7 @@ public:
 		return name + index;
 	}
 
-	std::string merge(std::string file_one, std::string file_two) {
+	std::string merge(std::string file_one, std::string file_two, int file_id) {
 		first_buffer.open(file_one.c_str(), std::ios::in);
 		second_buffer.open(file_two.c_str(), std::ios::in);
 
@@ -350,6 +353,10 @@ public:
 		std::vector<std::string> file_two_row;
 		std::string filename, one_temp, two_temp;
 
+		std::stringstream ss;
+		ss << file_id;
+		filename = ss.str();
+
 		File *page = NULL;
 		while (std::getline(this->first_buffer, one_temp) || std::getline(this->second_buffer, two_temp)) {
 			if (this->first_buffer >> one_temp && one_flag)
@@ -359,7 +366,7 @@ public:
 				read(file_two_row, this->second_buffer, two_temp);
 
 			if (page == NULL)
-				//page = new File(filename, true);
+				page = new File(filename);
 
 				if (file_compare(file_one_row[0], file_two_row[0])) {
 					addToPage(page, file_one_row);
@@ -375,7 +382,7 @@ public:
 			count++;
 
 			if (count == block_size) {
-				//page.save();
+				page->save();
 				delete page;
 				page = NULL;
 			}
@@ -383,7 +390,7 @@ public:
 
 		first_buffer.close();
 		second_buffer.close();
-		return "temp";
+		return filename;
 	}
 
 	void merge_files() {
@@ -396,12 +403,13 @@ public:
 		// First Pass.
 		first_file = fetch_file_name(0);
 		second_file = fetch_file_name(1);
-		merged_file = merge(first_file, second_file);
+		merged_file = merge(first_file, second_file, 0);
 
 		// Second Pass
-		for (int i = 2; i < total - 1; i++) {
+		int i;
+		for (i = 2; i < total - 1; i++) {
 			second_file = fetch_file_name(i);
-			merged_file = merge(merged_file, second_file);
+			merged_file = merge(merged_file, second_file, i);
 		}
 	}
 };
@@ -414,6 +422,9 @@ int main()
 
 	int total_dept = dept_file.read_table();
 	int total_emp = emp_file.read_table();
+
+	BufferHandler buffer_handler("tempdept_1", "dept", total_dept, memory_size);
+	buffer_handler.merge_files();
 
 	return 0;
 }
