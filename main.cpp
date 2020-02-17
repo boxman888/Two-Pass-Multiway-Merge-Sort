@@ -5,6 +5,7 @@
 #include<cmath>
 #include<fstream>
 #include<sstream>
+#include<cstdio>
 
 class Dept {
 private:
@@ -350,7 +351,7 @@ public:
 		second_buffer.open(file_two.c_str(), std::ios::in);
 
 		unsigned int count = 0;
-		int one_flag, two_flag;
+		int one_flag, two_flag, type_flag;
 		one_flag = two_flag = 1;
 		std::vector<std::string> file_one_row;
 		std::vector<std::string> file_two_row;
@@ -359,6 +360,11 @@ public:
 		std::stringstream ss;
 		ss << file_id;
 		filename = ss.str();
+
+		if (type.compare("dept") == 0)
+			type_flag = 3;
+		if (type.compare("emp") == 0)
+			type_flag = 0;
 
 		File *page = NULL;
 		while (this->first_buffer.is_open() || this->second_buffer.is_open()) {
@@ -374,20 +380,28 @@ public:
 			if (page == NULL)
 				page = new File(filename);
 			
+			// !!!!DANGER!!!!
 			// Bad Hack....
-			if (file_one_row.size() == 0)
-				file_one_row.push_back("9999999");
+			// This is a sin.
+			// I must repent.
+			// For the love of all that is right, plz fix later.
+			if (file_one_row.size() == 0){
+				for (int i = 0; i < 4; i++)
+					file_one_row.push_back("9999999");
+			}
+			if (file_two_row.size() == 0){
+				for (int i = 0; i < 4; i++)
+					file_two_row.push_back("9999999");
+			}
 
-			if (file_two_row.size() == 0)
-				file_two_row.push_back("9999999");
-
-			if (file_two_row[0].compare("9999999") == 0 && file_one_row[0].compare("9999999") == 0) {
+			if (file_two_row[type_flag].compare("9999999") == 0 && file_one_row[type_flag].compare("9999999") == 0) {
 				this->first_buffer.close();
 				this->second_buffer.close();
 				continue;
 			}
+			// End of bad hack.
 
-			if (file_compare(file_one_row[0], file_two_row[0])) {
+			if (file_compare(file_one_row[type_flag], file_two_row[type_flag])) {
 				addToPage(page, file_one_row);
 				file_one_row.clear();
 				one_flag = 1;
@@ -418,23 +432,62 @@ public:
 		return filename;
 	}
 
-	void merge_files() {
-		if (total <= 1)
-			return;
+	bool removefile(std::string &file_name){
+		char buffer[file_name.length()];
+		strcpy(buffer, file_name.c_str());
+		if (remove(buffer) != 0)
+			return true;
+		return false;
+	}
 
+	bool renamefile(std::string &file_name, std::string new_name){
+		char buffer_old[file_name.length()];
+		char buffer_new[new_name.length()];
+
+		strcpy(buffer_old, file_name.c_str());
+		strcpy(buffer_new, new_name.c_str());
+
+		if (rename(buffer_old, buffer_new))
+			return true;
+		return false;
+	}
+
+	void merge_files() {
 		std::string merged_file;
 		std::string first_file;
 		std::string second_file;
+
+		int type_flag = 0;
+		if (type.compare("dept") == 0)
+			type_flag = 1;
+		if (type.compare("emp") == 0)
+			type_flag = 0;
+
+		if (total <= 1){
+			std::stringstream ss;
+			first_file = fetch_file_name(1);
+			ss << type_flag;
+			if (renamefile(first_file, ss.str()))
+				perror("Error renaming file.\n");
+			return;
+		}
+
 		// First Pass.
 		first_file = fetch_file_name(1);
 		second_file = fetch_file_name(2);
-		merged_file = merge(first_file, second_file, 0);
+		merged_file = merge(first_file, second_file, type_flag);
+
+		// Only for Unix like systems.
+		if (removefile(first_file) || removefile(second_file))
+			perror("Error deleting file.\n");
 
 		// Second Pass
 		int i;
 		for (i = 2; i < total - 1; i++) {
 			second_file = fetch_file_name(i);
 			merged_file = merge(merged_file, second_file, i);
+			if (removefile(second_file) != 0)
+				perror("Error deleting file.\n");
 		}
 	}
 };
@@ -448,8 +501,11 @@ int main()
 	int total_dept = dept_file.read_table();
 	int total_emp = emp_file.read_table();
 	
-	BufferHandler buffer_handler("tempemp_", "emp", total_emp, memory_size);
-	buffer_handler.merge_files();
+	BufferHandler buffer_handler_emp("tempemp_", "emp", total_emp, memory_size);
+	BufferHandler buffer_handler_dept("tempdept_", "dept", total_dept, memory_size);
+
+	buffer_handler_emp.merge_files();
+	buffer_handler_dept.merge_files();
 
 	return 0;
 }
