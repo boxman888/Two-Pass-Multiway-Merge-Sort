@@ -156,7 +156,7 @@ public:
 	bool save() {
 		if (dept.size() != 0) {
 			std::sort(dept.begin(), dept.end(), compare_dept);
-			
+
 			std::ofstream fout(name.c_str(), std::ios::app);
 			//fout.open(name.c_str(), std::ios::out);
 			for (size_t i = 0; i < dept.size(); i++) {
@@ -220,8 +220,8 @@ private:
 		File* page = NULL;
 		count = block_count = 0;
 		while (std::getline(fin, temp)) {
- 			row.clear();
-			getline(fin, line);
+			row.clear();
+			//getline(fin, line);
 			std::stringstream ss(temp);
 
 			while (getline(ss, word, ',')) {
@@ -235,10 +235,13 @@ private:
 				s.clear();
 				s << count;
 				std::string index = s.str();
+
 				if (type.compare("dept") == 0)
 					filename = "tempdept_" + index;
+
 				if (type.compare("emp") == 0)
 					filename = "tempemp_" + index;
+
 				page = new File(filename);
 			}
 
@@ -298,7 +301,7 @@ private:
 	void read(std::vector<std::string> &row, std::fstream &name, std::string &temp) {
 		std::string line, word, filename;
 
-		getline(name, line);
+		//getline(name, line);
 		std::stringstream ss(temp);
 
 		while (getline(ss, word, ',')) {
@@ -358,26 +361,44 @@ public:
 		filename = ss.str();
 
 		File *page = NULL;
-		while (std::getline(this->first_buffer, one_temp) || std::getline(this->second_buffer, two_temp)) {
-			if (this->first_buffer >> one_temp && one_flag)
+		while (this->first_buffer.is_open() || this->second_buffer.is_open()) {
+			if (one_flag && this->first_buffer.is_open()) {
+				std::getline(this->first_buffer, one_temp);
 				read(file_one_row, this->first_buffer, one_temp);
-
-			if (this->second_buffer >> two_temp && two_flag)
+			}
+			if (two_flag && this->second_buffer.is_open()) {
+				std::getline(this->second_buffer, two_temp);
 				read(file_two_row, this->second_buffer, two_temp);
+			}
 
 			if (page == NULL)
 				page = new File(filename);
+			
+			// Bad Hack....
+			if (file_one_row.size() == 0)
+				file_one_row.push_back("9999999");
 
-				if (file_compare(file_one_row[0], file_two_row[0])) {
-					addToPage(page, file_one_row);
-					one_flag = 1;
-					two_flag = 0;
-				}
-				else {
-					addToPage(page, file_two_row);
-					one_flag = 0;
-					two_flag = 1;
-				}
+			if (file_two_row.size() == 0)
+				file_two_row.push_back("9999999");
+
+			if (file_two_row[0].compare("9999999") == 0 && file_one_row[0].compare("9999999") == 0) {
+				this->first_buffer.close();
+				this->second_buffer.close();
+				continue;
+			}
+
+			if (file_compare(file_one_row[0], file_two_row[0])) {
+				addToPage(page, file_one_row);
+				file_one_row.clear();
+				one_flag = 1;
+				two_flag = 0;
+			}
+			else {
+				addToPage(page, file_two_row);
+				file_two_row.clear();
+				one_flag = 0;
+				two_flag = 1;
+			}
 
 			count++;
 
@@ -387,22 +408,26 @@ public:
 				page = NULL;
 			}
 		}
-
+		if (page != NULL) {
+			page->save();
+			delete page;
+			page = NULL;
+		}
 		first_buffer.close();
 		second_buffer.close();
 		return filename;
 	}
 
 	void merge_files() {
-		if (total > 0)
+		if (total <= 1)
 			return;
 
 		std::string merged_file;
 		std::string first_file;
 		std::string second_file;
 		// First Pass.
-		first_file = fetch_file_name(0);
-		second_file = fetch_file_name(1);
+		first_file = fetch_file_name(1);
+		second_file = fetch_file_name(2);
 		merged_file = merge(first_file, second_file, 0);
 
 		// Second Pass
@@ -422,8 +447,8 @@ int main()
 
 	int total_dept = dept_file.read_table();
 	int total_emp = emp_file.read_table();
-
-	BufferHandler buffer_handler("tempdept_1", "dept", total_dept, memory_size);
+	
+	BufferHandler buffer_handler("tempemp_", "emp", total_emp, memory_size);
 	buffer_handler.merge_files();
 
 	return 0;
