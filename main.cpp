@@ -192,11 +192,11 @@ public:
 
 	~File() {
 		if (emp.size() != 0) {
-			for (size_t i = 0; i < emp.size() - 1; i++)
+			for (size_t i = 0; i < emp.size(); i++)
 				delete emp[i];
 		}
 		if (dept.size() != 0) {
-			for (size_t i = 0; i < dept.size() - 1; i++)
+			for (size_t i = 0; i < dept.size(); i++)
 				delete dept[i];
 		}
 	}
@@ -506,7 +506,7 @@ class JoinTables{
 		std::fstream fout;
 		std::vector<Emp*> emp;
 		std::vector<Dept*> dept;
-	
+
 	void read(std::vector<std::string> &row, std::fstream &name, std::string &temp) {
 		std::string line, word, filename;
 
@@ -526,7 +526,7 @@ class JoinTables{
 			<< "did" << ","
 			<< "dname" << ","
 			<<  "budget" << "\n";
-		for (size_t i = 0; i < emp.size(); i++){
+		for (size_t i = 0; i < emp.size()-1; i++){
 			fout << emp[i]->get_eid() << ","
 				<< emp[i]->get_ename() << ","
 				<< emp[i]->get_age() << ","
@@ -551,7 +551,7 @@ class JoinTables{
 		// I Just want this to be done, so this is not going to be clean....
 		void join(){
 			file_two.open(file_two_name.c_str(), std::ios::in);
-			
+
 			int flag, temp;
 			double a = 0;
 			std::vector<std::string> file_one_row;
@@ -562,17 +562,17 @@ class JoinTables{
 			Dept *d = NULL;
 
 			flag = 1;
-			
-			
+
+
 			while (file_two.is_open()) {
 				std::getline(file_two, two_temp);
 				read(file_two_row, file_two, two_temp);
 
-				file_one.open(file_one_name.c_str(), std::ios::in);	
+				file_one.open(file_one_name.c_str(), std::ios::in);
 				while (file_one.is_open()){
 					std::getline(file_one, one_temp);
 					read(file_one_row, file_one, one_temp);
-					
+
 					if (atoi(file_one_row[0].c_str()) == atoi(file_two_row[3].c_str())){
 						file_one.close();
 						continue;
@@ -602,7 +602,7 @@ class JoinTables{
 					file_one_row.clear();
 					file_two_row.clear();
 				}
-				
+
 				if(file_two.eof()){
 					file_two.close();
 					file_one.close();
@@ -615,7 +615,7 @@ class JoinTables{
 			}
 			if (emp.size() > 0)
 				save();
-			
+
 			file_one.close();
 			file_two.close();
 		}
@@ -642,7 +642,7 @@ int main()
 	sorted_dept = buffer_handler_dept.merge_files();
 
 	JoinTables tables(sorted_emp, sorted_dept, memory_size);
-	
+
 	tables.join();
 	buffer_handler_emp.removefile(sorted_emp);
 	buffer_handler_dept.removefile(sorted_dept);
