@@ -253,7 +253,7 @@ private:
 			if (type.compare("emp") == 0) {
 				std::stringstream sd(row[3]);
 				sd >> dd;
-				page->build_emp(atoi(row[0].c_str()), atoi(row[1].c_str()), dd, row[1]);
+				page->build_emp(atoi(row[0].c_str()), atoi(row[2].c_str()), dd, row[1]);
 			}
 			if (block_count == block_size - 1) {
 				page->save();
@@ -324,7 +324,7 @@ private:
 		if (type.compare("emp") == 0) {
 			std::stringstream ss(row[3]);
 			ss >> d;
-			page->build_emp(atoi(row[0].c_str()), atoi(row[1].c_str()), d, row[1]);
+			page->build_emp(atoi(row[0].c_str()), atoi(row[2].c_str()), d, row[1]);
 		}
 	}
 
@@ -449,7 +449,7 @@ public:
 		return false;
 	}
 
-	void merge_files() {
+	std::string merge_files() {
 		std::string merged_file;
 		std::string first_file;
 		std::string second_file;
@@ -464,9 +464,11 @@ public:
 			std::stringstream ss;
 			first_file = fetch_file_name(1);
 			ss << type_flag;
-			if (renamefile(first_file, type + "_" + ss.str()))
+			if (renamefile(first_file, type + "_" + ss.str())){
 				perror("Error renaming file.\n");
-			return;
+				exit(EXIT_FAILURE);
+			}
+			return type + "_" + ss.str();
 		}
 
 		// First Pass.
@@ -488,12 +490,145 @@ public:
 			if (removefile(second_file) != 0 || removefile(temp) != 0)
 				perror("Error deleting file.\n");
 		}
+		first_buffer.close();
+		second_buffer.close();
+		return merged_file;
 	}
+};
+
+class JoinTables{
+	private:
+		int block_size;
+		std::string file_one_name;
+		std::string file_two_name;
+		std::fstream file_one;
+		std::fstream file_two;
+		std::fstream fout;
+		std::vector<Emp*> emp;
+		std::vector<Dept*> dept;
+	
+	void read(std::vector<std::string> &row, std::fstream &name, std::string &temp) {
+		std::string line, word, filename;
+
+		//std::getline(name, line);
+		std::stringstream ss(temp);
+
+		while (getline(ss, word, ',')) {
+			row.push_back(word);
+		}
+	}
+	void save(){
+		std::ofstream fout("join.csv", std::ios::app);
+		fout << "id" << ","
+			<< "ename" << ","
+			<< "age" << ","
+			<< "salary" << ","
+			<< "did" << ","
+			<< "dname" << ","
+			<<  "budget" << "\n";
+		for (size_t i = 0; i < emp.size(); i++){
+			fout << emp[i]->get_eid() << ","
+				<< emp[i]->get_ename() << ","
+				<< emp[i]->get_age() << ","
+				<< emp[i]->get_salary() << ","
+				<< dept[i]->get_did() << ","
+				<< dept[i]->get_dname() << ","
+				<< dept[i]->get_budget() << "\n";
+				delete emp[i];
+				delete dept[i];
+		}
+		emp.clear();
+		dept.clear();
+		fout.close();
+	}
+
+	public:
+		JoinTables(std::string name_one, std::string name_two, int block_size){
+			file_one_name = name_one;
+			file_two_name = name_two;
+			this->block_size = block_size;
+		}
+		// I Just want this to be done, so this is not going to be clean....
+		void join(){
+			file_two.open(file_two_name.c_str(), std::ios::in);
+			
+			int flag, temp;
+			double a = 0;
+			std::vector<std::string> file_one_row;
+			std::vector<std::string> file_two_row;
+			std::string one_temp, two_temp;
+
+			Emp *e = NULL;
+			Dept *d = NULL;
+
+			flag = 1;
+			
+			
+			while (file_two.is_open()) {
+				std::getline(file_two, two_temp);
+				read(file_two_row, file_two, two_temp);
+
+				file_one.open(file_one_name.c_str(), std::ios::in);	
+				while (file_one.is_open()){
+					std::getline(file_one, one_temp);
+					read(file_one_row, file_one, one_temp);
+					
+					if (atoi(file_one_row[0].c_str()) == atoi(file_two_row[3].c_str())){
+						file_one.close();
+						continue;
+					}
+					if (file_one.eof())
+						file_one.close();
+
+					file_one_row.clear();
+				}
+
+				if (atoi(file_one_row[0].c_str()) == atoi(file_two_row[3].c_str())){
+					std::stringstream ss;
+					ss << file_one_row[3];
+					ss >> a;
+					e = new Emp(atoi(file_one_row[0].c_str()), atoi(file_one_row[2].c_str()), a, file_one_row[1]);
+
+					ss << file_two_row[2];
+					ss >> a;
+					d = new Dept(atoi(file_two_row[0].c_str()), atoi(file_two_row[3].c_str()), a, file_two_row[1]);
+
+					emp.push_back(e);
+					dept.push_back(d);
+
+					e = NULL;
+					d = NULL;
+
+					file_one_row.clear();
+					file_two_row.clear();
+				}
+				
+				if(file_two.eof()){
+					file_two.close();
+					file_one.close();
+				}
+
+				if (emp.size() == dept.size() && emp.size() == block_size){
+					save();
+				}
+
+			}
+			if (emp.size() > 0)
+				save();
+			
+			file_one.close();
+			file_two.close();
+		}
+
+
 };
 
 int main()
 {
 	int memory_size = 22;
+	std::string sorted_emp;
+	std::string sorted_dept;
+
 	FileHandler dept_file("Dept.csv", "dept", memory_size);
 	FileHandler emp_file("Emp.csv", "emp", memory_size);
 
@@ -503,8 +638,14 @@ int main()
 	BufferHandler buffer_handler_emp("tempemp_", "emp", total_emp, memory_size);
 	BufferHandler buffer_handler_dept("tempdept_", "dept", total_dept, memory_size);
 
-	buffer_handler_emp.merge_files();
-	buffer_handler_dept.merge_files();
+	sorted_emp = buffer_handler_emp.merge_files();
+	sorted_dept = buffer_handler_dept.merge_files();
+
+	JoinTables tables(sorted_emp, sorted_dept, memory_size);
+	
+	tables.join();
+	buffer_handler_emp.removefile(sorted_emp);
+	buffer_handler_dept.removefile(sorted_dept);
 
 	return 0;
 }
